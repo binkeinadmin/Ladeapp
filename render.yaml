@@ -13,14 +13,5 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
-      - key: DATA_DIR
-        value: /var/data
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: ladeapp
-          property: url
-    disk:
-      name: ladeapp-data
-      mountPath: /var/data
-      sizeGB: 1
+        sync: false
