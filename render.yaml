@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: ladeapp
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    rootDir: .
+    buildCommand: npm install --prefix backend && npm install --prefix frontend && npm run build:backend && npm run build:frontend
+    startCommand: npm run start --prefix backend
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATA_DIR
+        value: /var/data
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: ladeapp
+          property: url
+    disks:
+      - name: ladeapp-data
+        mountPath: /var/data
+        sizeGB: 1

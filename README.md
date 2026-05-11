@@ -58,6 +58,24 @@ cd frontend && npm run build
 cd backend && npm start
 ```
 
+## Deployment auf Render
+
+Das Repository enthält eine fertige Blueprint-Datei: `render.yaml`.
+
+### Schritte
+1. Repository nach GitHub pushen
+2. In Render: **New +** -> **Blueprint**
+3. GitHub-Repository auswählen und Deploy starten
+
+Render nutzt dann automatisch:
+- Build: Backend + Frontend Build
+- Start: Backend-Server (liefert Frontend mit aus)
+- Health Check: `/api/health`
+- Persistent Disk für SQLite unter `/var/data`
+
+### Hinweis zu Daten
+Die SQLite-Datei liegt auf Render in der persistenten Disk. Dadurch bleiben Stationsdaten und Warteliste über Redeploys hinweg erhalten.
+
 ## Nutzung
 
 ### QR-Codes an den Säulen anbringen
