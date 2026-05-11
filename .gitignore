@@ -7,6 +7,7 @@ dist/
 */dist/
 backend/dist/
 frontend/dist/
+backend/public/
 
 # Database (runtime data, not committed)
 backend/data/*.db

@@ -15,13 +15,18 @@ const allowedOrigins = [
   FRONTEND_URL,
   // Allow the production server itself (same-origin via backend static serving)
   `http://localhost:${PORT}`,
+  // Allow any onrender.com subdomain for production
+  /\.onrender\.com$/,
 ];
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (same-origin, curl, mobile apps in production)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      const allowed = allowedOrigins.some((o) =>
+        o instanceof RegExp ? o.test(origin) : o === origin
+      );
+      if (allowed) return callback(null, true);
       return callback(new Error('CORS: origin not allowed'));
     },
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
@@ -82,7 +87,7 @@ app.get('/api/health', readLimiter, (_req: Request, res: Response) => {
 });
 
 // Serve built frontend in production
-const FRONTEND_DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');
+const FRONTEND_DIST = path.join(__dirname, '..', 'public');
 app.use(express.static(FRONTEND_DIST));
 app.get('*', readLimiter, (_req: Request, res: Response) => {
   const indexPath = path.join(FRONTEND_DIST, 'index.html');
