@@ -20,7 +20,7 @@ services:
           type: web
           name: ladeapp
           property: url
-    disks:
-      - name: ladeapp-data
-        mountPath: /var/data
-        sizeGB: 1
+    disk:
+      name: ladeapp-data
+      mountPath: /var/data
+      sizeGB: 1
