@@ -84,7 +84,7 @@ app.get('/api/health', readLimiter, (_req: Request, res: Response) => {
 // Serve built frontend in production
 const FRONTEND_DIST = path.join(__dirname, '..', '..', 'frontend', 'dist');
 app.use(express.static(FRONTEND_DIST));
-app.get('*', (_req: Request, res: Response) => {
+app.get('*', readLimiter, (_req: Request, res: Response) => {
   const indexPath = path.join(FRONTEND_DIST, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) res.status(200).send('Ladeapp Backend läuft');
