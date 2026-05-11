@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import db from '../db';
+import { readLimiter, writeLimiter } from '../middleware';
 
 const router = Router();
 
 // GET /api/stations - all stations with active session info
-router.get('/', (_req: Request, res: Response) => {
+router.get('/', readLimiter, (_req: Request, res: Response) => {
   const stations = db.prepare(`
     SELECT 
       s.id,
@@ -23,7 +24,7 @@ router.get('/', (_req: Request, res: Response) => {
 });
 
 // GET /api/stations/:id - single station
-router.get('/:id', (req: Request, res: Response) => {
+router.get('/:id', readLimiter, (req: Request, res: Response) => {
   const station = db.prepare(`
     SELECT 
       s.id,
@@ -46,7 +47,7 @@ router.get('/:id', (req: Request, res: Response) => {
 });
 
 // POST /api/stations/:id/checkin - check in to a station
-router.post('/:id/checkin', (req: Request, res: Response) => {
+router.post('/:id/checkin', writeLimiter, (req: Request, res: Response) => {
   const { user_name, car_plate } = req.body;
   if (!user_name || !car_plate) {
     return res.status(400).json({ error: 'Name und Kennzeichen erforderlich' });
@@ -77,7 +78,7 @@ router.post('/:id/checkin', (req: Request, res: Response) => {
 });
 
 // POST /api/stations/:id/checkout - check out from a station
-router.post('/:id/checkout', (req: Request, res: Response) => {
+router.post('/:id/checkout', writeLimiter, (req: Request, res: Response) => {
   const station = db.prepare('SELECT * FROM stations WHERE id = ?').get(req.params.id) as { id: number; status: string } | undefined;
   if (!station) {
     return res.status(404).json({ error: 'Station nicht gefunden' });
@@ -115,7 +116,7 @@ router.post('/:id/checkout', (req: Request, res: Response) => {
 });
 
 // PATCH /api/stations/:id/status - set offline/available manually
-router.patch('/:id/status', (req: Request, res: Response) => {
+router.patch('/:id/status', writeLimiter, (req: Request, res: Response) => {
   const { status } = req.body;
   const validStatuses = ['available', 'offline'];
   if (!validStatuses.includes(status)) {

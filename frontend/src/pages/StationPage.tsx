@@ -103,7 +103,10 @@ export default function StationPage() {
           <p className="text-base text-gray-800">{success}</p>
           <div className="flex flex-col gap-2">
             <button
-              onClick={() => { setView('info'); setSuccess(''); }}
+              onClick={() => {
+                setView('info');
+                setSuccess('');
+              }}
               className="btn-secondary w-full"
             >
               Zurück zur Station

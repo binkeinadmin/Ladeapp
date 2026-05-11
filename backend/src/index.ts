@@ -4,20 +4,37 @@ import path from 'path';
 import QRCode from 'qrcode';
 import stationsRouter from './routes/stations';
 import waitlistRouter from './routes/waitlist';
+import { readLimiter } from './middleware';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-app.use(cors({ origin: '*' }));
+// CORS: restrict to the known frontend origin (configurable via env)
+const allowedOrigins = [
+  FRONTEND_URL,
+  // Allow the production server itself (same-origin via backend static serving)
+  `http://localhost:${PORT}`,
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (same-origin, curl, mobile apps in production)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('CORS: origin not allowed'));
+    },
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  })
+);
 app.use(express.json());
 
-// API routes
+// API routes (individual handlers carry their own rate limiters from middleware.ts)
 app.use('/api/stations', stationsRouter);
 app.use('/api/waitlist', waitlistRouter);
 
-// QR code for a station → returns SVG data URL
-app.get('/api/qr/:id', async (req: Request, res: Response) => {
+// QR code for a station → returns data URL
+app.get('/api/qr/:id', readLimiter, async (req: Request, res: Response) => {
   const stationId = req.params.id;
   const stationUrl = `${FRONTEND_URL}/station/${stationId}`;
   try {
@@ -35,7 +52,7 @@ app.get('/api/qr/:id', async (req: Request, res: Response) => {
 // SSE endpoint – clients subscribe and get push notifications on changes
 const clients: Set<Response> = new Set();
 
-app.get('/api/events', (_req: Request, res: Response) => {
+app.get('/api/events', readLimiter, (_req: Request, res: Response) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -60,7 +77,7 @@ export function broadcast(event: string, data: unknown): void {
 }
 
 // Health check
-app.get('/api/health', (_req: Request, res: Response) => {
+app.get('/api/health', readLimiter, (_req: Request, res: Response) => {
   res.json({ status: 'ok', clients: clients.size });
 });
 
